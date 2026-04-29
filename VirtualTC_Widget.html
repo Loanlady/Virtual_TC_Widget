@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Transaction Coordinator — LoanLady Team</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --purple:#6B4FA0;--purple-lt:#9B7FD0;--purple-bg:#F3EFFE;
+    --pink:#C94F7C;--pink-lt:#F0A0BE;--pink-bg:#FEF0F5;
+    --green:#1D9E75;--green-bg:#EDFAF4;
+    --amber:#9A6000;--amber-bg:#FFF8EC;--amber-border:#E0C080;
+    --dark:#1A1230;--mid:#4A3D6B;--muted:#7A6B9A;
+    --border:#E2D9F3;--white:#FFFFFF;--offwhite:#FAF8FF;
+    --radius:12px;--radius-lg:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--offwhite);color:var(--dark);min-height:100vh;}
+
+  .header{background:var(--dark);padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+  .header-left{display:flex;align-items:center;gap:1rem;}
+  .header-logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .header-title h1{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--white);}
+  .header-title p{font-size:.72rem;color:var(--purple-lt);margin-top:2px;}
+  .header-badge{font-size:.7rem;font-weight:500;background:rgba(255,255,255,.08);color:var(--pink-lt);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;white-space:nowrap;}
+
+  .tabs-wrap{background:var(--dark);padding:0 2rem;border-bottom:1px solid rgba(255,255,255,.08);}
+  .tabs{display:flex;max-width:960px;}
+  .tab-btn{padding:.8rem 1.6rem;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tab-btn:hover{color:var(--purple-lt);}
+  .tab-btn.active{color:var(--white);border-bottom-color:var(--purple-lt);}
+
+  .main{max-width:980px;margin:0 auto;padding:1.75rem 1.5rem;}
+  .panel{display:none;}.panel.active{display:block;}
+
+  .rebrand-note{background:var(--purple-bg);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1.1rem;font-size:.8rem;color:var(--mid);margin-bottom:1.25rem;line-height:1.6;}
+  .rebrand-note strong{color:var(--purple);}
+
+  .form-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;}
+  .form-card h2{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:var(--dark);margin-bottom:1.1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+  .field label{display:block;font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+  .field input{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--dark);background:var(--white);transition:border-color .2s;outline:none;}
+  .field input:focus{border-color:var(--purple);}
+  .field input::placeholder{color:#C0B8D0;}
+
+  .generate-btn{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--purple),var(--pink));color:var(--white);border:none;border-radius:var(--radius);font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .15s;}
+  .generate-btn:hover{opacity:.92;transform:translateY(-1px);}
+
+  .results{display:none;margin-top:1.75rem;}.results.visible{display:block;}
+  .results-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.1rem;}
+  .results-topbar h2{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--dark);}
+
+  .btn{padding:.45rem 1rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block;}
+  .btn-outline{background:var(--white);border:1.5px solid var(--border);color:var(--mid);}
+  .btn-outline:hover{border-color:var(--purple);color:var(--purple);}
+  .btn-green{background:var(--green);color:var(--white);border:1.5px solid var(--green);}
+  .btn-green:hover{opacity:.88;}
+
+  .section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .65rem;display:flex;align-items:center;gap:8px;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .email-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.85rem;overflow:hidden;}
+
+  .email-card-head{padding:.75rem 1rem;background:var(--offwhite);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:.75rem;}
+  .email-meta{flex:1;min-width:0;}
+  .email-milestone{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple);margin-bottom:2px;}
+  .email-subject{font-size:.88rem;font-weight:600;color:var(--dark);}
+  .email-to{font-size:.75rem;color:var(--muted);margin-top:2px;}
+  .email-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:wrap;align-items:center;}
+
+  .copy-btn{padding:.32rem .75rem;background:var(--white);border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;color:var(--mid);cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .copy-btn:hover{border-color:var(--purple);color:var(--purple);}
+  .copy-btn.copied{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+
+  .outlook-btn{padding:.32rem .85rem;background:#0078D4;color:var(--white);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+  .outlook-btn:hover{opacity:.88;}
+
+  .schedule-row{display:flex;align-items:center;gap:.55rem;padding:.5rem 1rem;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);flex-wrap:wrap;}
+  .schedule-label{font-size:.72rem;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+  .schedule-row input[type="date"],.schedule-row input[type="time"]{padding:.28rem .55rem;border:1.5px solid var(--amber-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--dark);background:var(--white);outline:none;}
+  .schedule-row input:focus{border-color:var(--amber);}
+  .cal-btn{padding:.28rem .75rem;background:var(--amber);color:var(--white);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;}
+  .cal-btn:hover{opacity:.85;}
+  .suggest-note{font-size:.68rem;color:#997030;font-style:italic;flex:1;min-width:120px;}
+
+  .email-card.edu .email-card-head{background:var(--pink-bg);}
+  .email-card.edu .email-milestone{color:var(--pink);}
+  .email-card.edu .schedule-row{background:#FEF5F8;border-bottom-color:#F0C8D8;}
+  .email-card.edu .schedule-label{color:var(--pink);}
+  .email-card.edu .schedule-row input:focus{border-color:var(--pink);}
+  .email-card.edu .cal-btn{background:var(--pink);}
+
+  .email-body{padding:.9rem 1rem;font-size:.855rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;}
+
+  .footer{text-align:center;padding:1.75rem;font-size:.76rem;color:var(--muted);border-top:1px solid var(--border);margin-top:2.5rem;}
+  .footer strong{color:var(--purple);}
+
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--dark);color:var(--white);padding:.65rem 1.1rem;border-radius:8px;font-size:.82rem;font-weight:500;display:none;z-index:999;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">🏠</div>
+    <div class="header-title">
+      <h1>Virtual Transaction Coordinator</h1>
+      <p>LoanLady Team — Powered by AI</p>
+    </div>
+  </div>
+  <div class="header-badge">Sponsored by Hillary the Loan Lady</div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('buyer')">Buyer's Agent</button>
+    <button class="tab-btn" onclick="switchTab('listing')">Listing Agent</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="rebrand-note">
+    <strong>Make this yours!</strong> Open Claude.ai and say: <em>"Rebrand this widget with my name [your name], brokerage [your brokerage], and colors [your colors]."</em> — Each email has an <strong>Open in Outlook</strong> button that pre-fills recipient, subject, and body. Set a date and time for each email and click <strong>Add to Outlook Calendar</strong> to get a reminder exactly when to send it.
+  </div>
+
+  <!-- BUYER PANEL -->
+  <div class="panel active" id="panel-buyer">
+    <div class="form-card">
+      <h2>Transaction Details — Buyer's Agent</h2>
+      <div class="form-grid">
+        <div class="field"><label>Buyer Name(s)</label><input id="b-buyer" type="text" placeholder="e.g. John & Mary Smith"></div>
+        <div class="field"><label>Buyer Email</label><input id="b-buyer-email" type="email" placeholder="e.g. john@email.com"></div>
+        <div class="field"><label>Property Address</label><input id="b-addr" type="text" placeholder="e.g. 123 Oak Lane, San Antonio TX"></div>
+        <div class="field"><label>Contract Price</label><input id="b-price" type="text" placeholder="e.g. $385,000"></div>
+        <div class="field"><label>Close Date</label><input id="b-close" type="date"></div>
+        <div class="field"><label>Option Period End Date</label><input id="b-option" type="date"></div>
+        <div class="field"><label>Earnest Money Amount</label><input id="b-earnest" type="text" placeholder="e.g. $3,850"></div>
+        <div class="field"><label>Listing Agent Name</label><input id="b-otheragent" type="text" placeholder="e.g. Jane Doe"></div>
+        <div class="field"><label>Listing Agent Email</label><input id="b-otheragent-email" type="email" placeholder="e.g. jane@realty.com"></div>
+        <div class="field"><label>Lender Name</label><input id="b-lender" type="text" placeholder="e.g. Hillary the Loan Lady"></div>
+        <div class="field"><label>Lender Email</label><input id="b-lender-email" type="email" placeholder="e.g. hillary@loanladyteam.com"></div>
+        <div class="field"><label>Title Company</label><input id="b-title" type="text" placeholder="e.g. Alamo Title"></div>
+        <div class="field"><label>Title Email</label><input id="b-title-email" type="email" placeholder="e.g. closer@alamotitle.com"></div>
+        <div class="field"><label>Your Name (Buyer's Agent)</label><input id="b-agent" type="text" placeholder="e.g. Sarah Johnson"></div>
+      </div>
+    </div>
+    <button class="generate-btn" onclick="generate('buyer')">Generate My Complete TC Email Package ✦</button>
+    <div class="results" id="results-buyer"></div>
+  </div>
+
+  <!-- LISTING PANEL -->
+  <div class="panel" id="panel-listing">
+    <div class="form-card">
+      <h2>Transaction Details — Listing Agent</h2>
+      <div class="form-grid">
+        <div class="field"><label>Seller Name(s)</label><input id="l-seller" type="text" placeholder="e.g. Robert & Linda Garcia"></div>
+        <div class="field"><label>Seller Email</label><input id="l-seller-email" type="email" placeholder="e.g. robert@email.com"></div>
+        <div class="field"><label>Buyer Name(s)</label><input id="l-buyer" type="text" placeholder="e.g. John & Mary Smith"></div>
+        <div class="field"><label>Property Address</label><input id="l-addr" type="text" placeholder="e.g. 123 Oak Lane, San Antonio TX"></div>
+        <div class="field"><label>Sale Price</label><input id="l-price" type="text" placeholder="e.g. $385,000"></div>
+        <div class="field"><label>Close Date</label><input id="l-close" type="date"></div>
+        <div class="field"><label>Option Period End Date</label><input id="l-option" type="date"></div>
+        <div class="field"><label>Earnest Money Amount</label><input id="l-earnest" type="text" placeholder="e.g. $3,850"></div>
+        <div class="field"><label>Buyer's Agent Name</label><input id="l-otheragent" type="text" placeholder="e.g. Sarah Johnson"></div>
+        <div class="field"><label>Buyer's Agent Email</label><input id="l-otheragent-email" type="email" placeholder="e.g. sarah@realty.com"></div>
+        <div class="field"><label>Buyer's Lender</label><input id="l-lender" type="text" placeholder="e.g. Hillary the Loan Lady"></div>
+        <div class="field"><label>Lender Email</label><input id="l-lender-email" type="email" placeholder="e.g. hillary@loanladyteam.com"></div>
+        <div class="field"><label>Title Company</label><input id="l-title" type="text" placeholder="e.g. Alamo Title"></div>
+        <div class="field"><label>Title Email</label><input id="l-title-email" type="email" placeholder="e.g. closer@alamotitle.com"></div>
+        <div class="field"><label>Your Name (Listing Agent)</label><input id="l-agent" type="text" placeholder="e.g. Maria Lopez"></div>
+      </div>
+    </div>
+    <button class="generate-btn" onclick="generate('listing')">Generate My Complete TC Email Package ✦</button>
+    <div class="results" id="results-listing"></div>
+  </div>
+</div>
+
+<div class="footer">
+  Virtual Transaction Coordinator — <strong>LoanLady Team</strong><br>
+  Sponsored by <strong>Hillary the Loan Lady</strong> — Your Partner from Pre-Approval to Keys
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+}
+function fmtDate(v){
+  if(!v)return'[date TBD]';
+  const d=new Date(v+'T12:00:00');
+  return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+function gv(id){return(document.getElementById(id)?.value?.trim())||'';}
+function gvOr(id,fb){return gv(id)||fb;}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+
+function buildMailto(to,subj,body){
+  return'mailto:'+encodeURIComponent(to||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+}
+
+function generate(side){
+  let d={};
+  if(side==='buyer'){
+    d={
+      buyer:gvOr('b-buyer','[Buyer Name]'), buyerEmail:gv('b-buyer-email'),
+      addr:gvOr('b-addr','[Property Address]'), price:gvOr('b-price','[Price]'),
+      close:gv('b-close'), option:gv('b-option'), earnest:gvOr('b-earnest','[Earnest Amount]'),
+      otheragent:gvOr('b-otheragent','[Listing Agent]'), otheragentEmail:gv('b-otheragent-email'),
+      lender:gvOr('b-lender','[Lender]'), lenderEmail:gv('b-lender-email'),
+      title:gvOr('b-title','[Title Company]'), titleEmail:gv('b-title-email'),
+      agent:gvOr('b-agent','[Your Name]'),
+    };
+  } else {
+    d={
+      seller:gvOr('l-seller','[Seller Name]'), sellerEmail:gv('l-seller-email'),
+      buyer:gvOr('l-buyer','[Buyer Name]'),
+      addr:gvOr('l-addr','[Property Address]'), price:gvOr('l-price','[Price]'),
+      close:gv('l-close'), option:gv('l-option'), earnest:gvOr('l-earnest','[Earnest Amount]'),
+      otheragent:gvOr('l-otheragent','[Buyer Agent]'), otheragentEmail:gv('l-otheragent-email'),
+      lender:gvOr('l-lender','[Lender]'), lenderEmail:gv('l-lender-email'),
+      title:gvOr('l-title','[Title Company]'), titleEmail:gv('l-title-email'),
+      agent:gvOr('l-agent','[Your Name]'),
+    };
+  }
+  const emails = side==='buyer' ? buildBuyerEmails(d) : buildListingEmails(d);
+  const milestones=emails.filter(e=>e.type==='milestone');
+  const edu=emails.filter(e=>e.type==='edu');
+  const allText=emails.map(e=>'TO: '+e.toLabel+'\nSUBJECT: '+e.subject+'\n\n'+e.body).join('\n\n'+'─'.repeat(60)+'\n\n');
+
+  // Store all email data in a registry keyed by id — avoids any escaping inside HTML attributes
+  window._tcEmails = window._tcEmails || {};
+  emails.forEach(e => { window._tcEmails[e.id] = e; });
+
+  let html=`
+    <div class="results-topbar">
+      <h2>Your Complete TC Email Package</h2>
+      <button class="btn btn-green" id="copyall-${side}">Copy All Emails</button>
+    </div>
+    <div class="section-label">Milestone Check-In Emails</div>`;
+  milestones.forEach(e=>{html+=renderCard(e,'');});
+  html+=`<div class="section-label">${side==='buyer'?'Buyer Education Emails':'Seller Communication Emails'}</div>`;
+  edu.forEach(e=>{html+=renderCard(e,'edu');});
+
+  const el=document.getElementById('results-'+side);
+  el.innerHTML=html;
+  el.classList.add('visible');
+
+  // Wire up copy-all after DOM is ready
+  document.getElementById('copyall-'+side).addEventListener('click', function(){
+    navigator.clipboard.writeText(allText).then(()=>showToast('All emails copied!'));
+  });
+
+  // Wire up all card buttons after DOM is ready (safe — no inline escaping needed)
+  emails.forEach(e => {
+    const copyBtn = document.getElementById('copybtn-'+e.id);
+    const outlookBtn = document.getElementById('outlookbtn-'+e.id);
+    const calBtn = document.getElementById('calbtn-'+e.id);
+    const full = 'TO: '+e.toLabel+'\nSUBJECT: '+e.subject+'\n\n'+e.body;
+
+    if(copyBtn) copyBtn.addEventListener('click', function(){
+      navigator.clipboard.writeText(full).then(()=>{
+        copyBtn.textContent='Copied!'; copyBtn.classList.add('copied');
+        setTimeout(()=>{ copyBtn.textContent='Copy'; copyBtn.classList.remove('copied'); }, 2000);
+      });
+    });
+
+    if(outlookBtn) outlookBtn.href = buildMailto(e.toEmail, e.subject, e.body);
+
+    if(calBtn) calBtn.addEventListener('click', function(){
+      const dateVal = document.getElementById('date-'+e.id)?.value;
+      const timeVal = document.getElementById('time-'+e.id)?.value || '09:00';
+      addToCalendar(dateVal, timeVal, e.subject, e.body);
+    });
+  });
+
+  setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function renderCard(e, cls){
+  const noteHtml = e.suggestNote ? `<span class="suggest-note">💡 ${e.suggestNote}</span>` : '';
+  // All interactive handlers wired up via addEventListener after innerHTML set — no escaping needed here
+  return `
+  <div class="email-card ${cls}" id="card-${e.id}">
+    <div class="email-card-head">
+      <div class="email-meta">
+        <div class="email-milestone">${e.milestone}</div>
+        <div class="email-subject">${e.subject}</div>
+        <div class="email-to">To: ${e.toLabel}</div>
+      </div>
+      <div class="email-actions">
+        <button class="copy-btn" id="copybtn-${e.id}">Copy</button>
+        <a class="outlook-btn" id="outlookbtn-${e.id}" href="#">&#9993; Open in Outlook</a>
+      </div>
+    </div>
+    <div class="schedule-row">
+      <span class="schedule-label">&#128197; Schedule send:</span>
+      <input type="date" id="date-${e.id}" value="${e.suggestDate||''}">
+      <input type="time" id="time-${e.id}" value="09:00">
+      <button class="cal-btn" id="calbtn-${e.id}">Add to Outlook Calendar</button>
+      ${noteHtml}
+    </div>
+    <div class="email-body">${e.body}</div>
+  </div>`;
+}
+
+function addToCalendar(dateVal, timeVal, subject, body){
+  if(!dateVal){showToast('Please set a send date first!');return;}
+  const [y,m,day]=dateVal.split('-');
+  const [hh,mm]=timeVal.split(':');
+  const p=n=>String(n).padStart(2,'0');
+  const dtS=`${y}${m}${day}T${p(hh)}${p(mm)}00`;
+  let eM=parseInt(mm)+15,eH=parseInt(hh)+Math.floor(eM/60);eM=eM%60;
+  const dtE=`${y}${m}${day}T${p(eH)}${p(eM)}00`;
+  const safeBody=body.replace(/\r\n/g,'\\n').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//LoanLady Team//Virtual TC//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nBEGIN:VEVENT\r\nDTSTART;TZID=America/Chicago:'+dtS+'\r\nDTEND;TZID=America/Chicago:'+dtE+'\r\nSUMMARY:SEND EMAIL: '+subject+'\r\nDESCRIPTION:'+safeBody+'\r\nSTATUS:CONFIRMED\r\nBEGIN:VALARM\r\nTRIGGER:-PT30M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder to send: '+subject+'\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='TC_Email_Reminder.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('Calendar file downloaded! Open it to add the reminder to Outlook.');
+}
+
+function buildBuyerEmails(d){
+  const allE=[d.buyerEmail,d.otheragentEmail,d.lenderEmail,d.titleEmail].filter(Boolean).join('; ');
+  const sig=`Warm regards,\n${d.agent}\nBuyer's Agent\n\nSponsored by Hillary the Loan Lady — Your Lending Partner`;
+  return[
+    {type:'milestone',id:'b-m-0',milestone:'Contract Executed — Send Immediately',
+     toLabel:'All Parties (Buyer, Listing Agent, Lender, Title)',toEmail:allE,
+     subject:`We Are Under Contract! — ${d.addr}`,
+     suggestDate:d.close,suggestNote:'Send same day as contract execution',
+     body:`Hi Team,\n\nExciting news — we are officially under contract! Here is a quick overview of our key dates and team.\n\nProperty: ${d.addr}\nPurchase Price: ${d.price}\nClose Date: ${fmtDate(d.close)}\nOption Period Ends: ${fmtDate(d.option)}\nEarnest Money: ${d.earnest}\n\nOur Team:\n• Buyer's Agent: ${d.agent}\n• Listing Agent: ${d.otheragent}\n• Lender: ${d.lender}\n• Title Company: ${d.title}\n\nNext Steps:\n• Earnest money to be delivered to title right away\n• Inspection to be scheduled during the option period\n• Lender will be reaching out regarding loan next steps\n\nLooking forward to a smooth closing!\n\n${sig}`},
+    {type:'milestone',id:'b-m-1',milestone:'Earnest Money Reminder',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Important: Earnest Money Due — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send day 1 — earnest money is time-sensitive',
+     body:`Hi ${d.buyer},\n\nYour earnest money of ${d.earnest} needs to be delivered to ${d.title} right away.\n\nImportant steps:\n• Wire funds directly — do NOT send a check\n• Call the title company FIRST to verify wire instructions\n• NEVER wire based on emailed instructions alone — always call to confirm\n\nOnce sent, please forward me the wire confirmation.\n\n${sig}`},
+    {type:'milestone',id:'b-m-2',milestone:'Option Period Active — Inspection',
+     toLabel:`${d.otheragent} (Listing Agent)`,toEmail:d.otheragentEmail,
+     subject:`Inspection Scheduling — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send within 24 hours of contract',
+     body:`Hi ${d.otheragent},\n\nWe are scheduling our inspection during the option period, which ends on ${fmtDate(d.option)}.\n\nPlease ensure the property is accessible and all utilities are on. I will send the scheduled time as soon as it is confirmed.\n\nThank you!\n\n${sig}`},
+    {type:'milestone',id:'b-m-3',milestone:'Repair Request Submitted',
+     toLabel:`${d.otheragent} (Listing Agent)`,toEmail:d.otheragentEmail,
+     subject:`Repair Request — ${d.addr}`,
+     suggestDate:d.option,suggestNote:'Send same day inspection report is received',
+     body:`Hi ${d.otheragent},\n\nPlease see the attached repair request on behalf of my buyers, ${d.buyer}.\n\nWe would appreciate a response prior to the option period expiration on ${fmtDate(d.option)}.\n\nPlease let me know if you would like to discuss.\n\n${sig}`},
+    {type:'milestone',id:'b-m-4',milestone:'Option Period Expiring — Lender Check-In',
+     toLabel:`${d.lender} (Lender)`,toEmail:d.lenderEmail,
+     subject:`Option Period Expiring — Loan Status Update — ${d.addr}`,
+     suggestDate:d.option,suggestNote:'Send 1–2 days before option period ends',
+     body:`Hi ${d.lender},\n\nOur option period is ending on ${fmtDate(d.option)} and we are moving forward with the purchase of ${d.addr} for ${d.buyer}.\n\nCan you please update us on:\n• Current loan status\n• Any outstanding documents needed\n• Appraisal timeline\n\nOur close date is ${fmtDate(d.close)}. Please let me know of any concerns.\n\n${sig}`},
+    {type:'milestone',id:'b-m-5',milestone:'Appraisal Ordered — Follow Up',
+     toLabel:`${d.lender} (Lender)`,toEmail:d.lenderEmail,
+     subject:`Appraisal Status — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send once option period expires',
+     body:`Hi ${d.lender},\n\nCan you confirm the appraisal has been ordered for ${d.addr} and share an estimated turnaround time?\n\nWe need to stay on track for our ${fmtDate(d.close)} close date. Please let me know if the appraiser needs access coordinated.\n\n${sig}`},
+    {type:'milestone',id:'b-m-6',milestone:'Appraisal Complete — Check Results',
+     toLabel:`${d.lender} (Lender)`,toEmail:d.lenderEmail,
+     subject:`Appraisal Results — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send as soon as appraisal is confirmed complete',
+     body:`Hi ${d.lender},\n\nI understand the appraisal has been completed for ${d.addr}. Can you please share the results and confirm whether the value supports our purchase price of ${d.price}?\n\nIf there are any concerns, please let me know immediately.\n\n${sig}`},
+    {type:'milestone',id:'b-m-7',milestone:'Clear to Close',
+     toLabel:'All Parties',toEmail:allE,
+     subject:`Clear to Close! — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send same day as CTC notification',
+     body:`Hi Team,\n\nGreat news — we have received our clear to close for ${d.addr}!\n\nWe are on track to close on ${fmtDate(d.close)}.\n\nNext Steps:\n• Final walkthrough to be scheduled prior to closing\n• ${d.title} will send closing disclosure and final figures\n• ${d.buyer} — please watch for funding instructions from title\n\nAlmost there — thank you all!\n\n${sig}`},
+    {type:'milestone',id:'b-m-8',milestone:'Final Walkthrough Reminder',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Final Walkthrough Reminder — ${d.addr}`,
+     suggestDate:d.close,suggestNote:'Send 1–2 days before closing',
+     body:`Hi ${d.buyer},\n\nYour final walkthrough is coming up before we close on ${fmtDate(d.close)}!\n\nPlease check:\n• All agreed-upon repairs have been completed\n• Appliances are working\n• No new damage since your inspection\n• Home is clean and clear of the seller's belongings\n\nI'll be with you every step of the way!\n\n${sig}`},
+    {type:'milestone',id:'b-m-9',milestone:'Closing Day Congratulations',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Congratulations — You're a Homeowner! — ${d.addr}`,
+     suggestDate:d.close,suggestNote:'Send closing day — after keys are handed over',
+     body:`Hi ${d.buyer},\n\nCongratulations — you are officially homeowners! 🏠\n\nIt has been an absolute pleasure representing you in the purchase of ${d.addr}.\n\nA few reminders:\n• Change the locks on all exterior doors\n• Update your address with the post office and bank\n• Save your closing documents somewhere safe\n\nThank you for trusting me — I'm always here for you!\n\n${sig}`},
+    {type:'edu',id:'b-e-0',milestone:'Buyer Education: Earnest Money',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`What Is Earnest Money? — Everything You Need to Know`,
+     suggestDate:'',suggestNote:'Send day 1 along with earnest money reminder',
+     body:`Hi ${d.buyer},\n\nHere is a simple breakdown of earnest money:\n\nWhat is it?\nYour earnest money (${d.earnest}) is a "good faith" deposit showing the seller you're serious.\n\nWhat happens to it?\n• Goes smoothly → applied toward your down payment at closing\n• Issue during option period → you walk away and get it back\n• Back out after option period without cause → seller may keep it\n\nHow to send it safely:\n• Wire directly to ${d.title}\n• ALWAYS call first to verify wire instructions\n• NEVER wire based on email instructions alone\n\nThis one step protects you from fraud. When in doubt, call me!\n\n${sig}`},
+    {type:'edu',id:'b-e-1',milestone:'Buyer Education: Option Period',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Your Option Period Explained — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send with option period start',
+     body:`Hi ${d.buyer},\n\nYour option period ends on ${fmtDate(d.option)} — here is what that means:\n\nWhat is it?\nYour "try before you buy" window. You can walk away for ANY reason before the deadline and get your earnest money back.\n\nWhat happens during this time?\n• Your inspector goes through the home top to bottom\n• We review the report together\n• We decide whether to ask for repairs or a credit\n• You choose whether to move forward\n\nAfter ${fmtDate(d.option)}, walking away could mean losing your earnest money — so the deadline matters!\n\n${sig}`},
+    {type:'edu',id:'b-e-2',milestone:'Buyer Education: Repair Negotiations',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`How Repair Negotiations Work`,
+     suggestDate:'',suggestNote:'Send after inspection report is received',
+     body:`Hi ${d.buyer},\n\nAfter your inspection, we decide what to ask the seller for. Here is how to think about it:\n\nAsk for:\n• Safety issues (electrical, plumbing, gas)\n• Major systems (roof, HVAC, water heater)\n• Significant defects the inspector flagged\n\nSkip:\n• Cosmetic issues (paint, carpet, minor wear)\n• Small cheap fixes you can handle yourself\n• Things that were visible when you made the offer\n\nThe seller can make repairs, give a closing credit, or say no — and we'll decide how to respond together.\n\n${sig}`},
+    {type:'edu',id:'b-e-3',milestone:'Buyer Education: Appraisal',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`What Is an Appraisal — and What If It Comes In Low?`,
+     suggestDate:'',suggestNote:'Send when appraisal is ordered',
+     body:`Hi ${d.buyer},\n\nYour lender has ordered an appraisal for ${d.addr}. Here's what you need to know:\n\nWhat is it?\nAn independent appraiser determines the home's market value. Your lender won't lend more than the appraised value.\n\nIf it comes in at or above ${d.price}: Great — we move forward!\n\nIf it comes in LOW, your options are:\n• Negotiate with the seller to lower the price\n• Pay the difference out of pocket\n• Use an appraisal contingency to walk away if we have one\n\nThis doesn't have to be a dealbreaker. I'll be right there with you.\n\n${sig}`},
+    {type:'edu',id:'b-e-4',milestone:'Buyer Education: Final Walkthrough',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Final Walkthrough — What to Look For`,
+     suggestDate:d.close,suggestNote:'Send 2 days before closing',
+     body:`Hi ${d.buyer},\n\nBefore we close, you'll walk through ${d.addr} one more time. Here's what to check:\n\n• All agreed-upon repairs are complete\n• No new damage since the inspection\n• All included appliances are there and working\n• Lights, fans, and outlets work\n• Plumbing runs and drains properly\n• Home is clean and empty\n\nBring your inspection report so you can cross-reference. If something is off, tell me immediately — we can address it before signing.\n\n${sig}`},
+    {type:'edu',id:'b-e-5',milestone:'Buyer Education: Closing Day',
+     toLabel:d.buyer,toEmail:d.buyerEmail,
+     subject:`Closing Day — What to Bring and What to Expect`,
+     suggestDate:d.close,suggestNote:'Send the evening before closing day',
+     body:`Hi ${d.buyer},\n\nClosing day for ${d.addr} is ${fmtDate(d.close)} — here's everything you need to know:\n\nBring:\n• Valid government-issued photo ID (every buyer on the loan)\n• Cashier's check or wire confirmation for closing funds\n• Your checkbook just in case\n\nWhat to expect:\n• Sit down at ${d.title} and sign a large stack of documents\n• The process takes about 45–90 minutes\n• Once funded — you get the keys! 🔑\n\nDo NOT make large purchases, open new credit, or change jobs before closing.\n\nSee you there — this is the big day! 🎉\n\n${sig}`},
+  ];
+}
+
+function buildListingEmails(d){
+  const allE=[d.sellerEmail,d.otheragentEmail,d.lenderEmail,d.titleEmail].filter(Boolean).join('; ');
+  const sig=`Warm regards,\n${d.agent}\nListing Agent\n\nSponsored by Hillary the Loan Lady — Your Lending Partner`;
+  return[
+    {type:'milestone',id:'l-m-0',milestone:'Contract Executed — Send Immediately',
+     toLabel:'All Parties (Seller, Buyer\'s Agent, Lender, Title)',toEmail:allE,
+     subject:`We Are Under Contract! — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send same day as contract execution',
+     body:`Hi Team,\n\nWonderful news — ${d.addr} is officially under contract!\n\nSale Price: ${d.price}\nClose Date: ${fmtDate(d.close)}\nOption Period Ends: ${fmtDate(d.option)}\nEarnest Money: ${d.earnest}\n\nOur Team:\n• Listing Agent: ${d.agent}\n• Buyer's Agent: ${d.otheragent}\n• Buyer's Lender: ${d.lender}\n• Title Company: ${d.title}\n\nNext Steps:\n• Earnest money to be delivered to title by the buyer\n• Inspector will contact us to schedule during the option period\n• Please keep the property accessible and utilities on\n\nLooking forward to a smooth transaction!\n\n${sig}`},
+    {type:'milestone',id:'l-m-1',milestone:'Earnest Money Confirmation',
+     toLabel:`${d.title} (Title)`,toEmail:d.titleEmail,
+     subject:`Earnest Money Confirmation Request — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send 24–48 hours after contract',
+     body:`Hi ${d.title} team,\n\nCan you please confirm receipt of the earnest money deposit of ${d.earnest} for the purchase of ${d.addr}?\n\nBuyer: ${d.buyer}\nSeller: ${d.seller}\nClose Date: ${fmtDate(d.close)}\n\nPlease send confirmation to all parties once received. Thank you!\n\n${sig}`},
+    {type:'milestone',id:'l-m-2',milestone:'Option Period — Home Ready',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`Inspection Incoming — What You Need to Know — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send within 24 hours of contract',
+     body:`Hi ${d.seller},\n\nThe buyer is scheduling their inspection. The option period ends ${fmtDate(d.option)}.\n\nTo prepare the home:\n• Ensure it is accessible at the scheduled time\n• Leave all utilities on (gas, electric, water)\n• Clear access to attic, electrical panel, water heater, and HVAC\n• Remove pets if possible\n\nYou don't need to be present — it's usually better if you're not. I'll send the scheduled date as soon as it's confirmed.\n\n${sig}`},
+    {type:'milestone',id:'l-m-3',milestone:'Repair Request Received',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`Repair Request — Let's Review Together — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send same day repair request is received',
+     body:`Hi ${d.seller},\n\nWe have received the buyer's repair request. I'd like to review it with you before the option period ends on ${fmtDate(d.option)}.\n\nOur options:\n• Agree to make the requested repairs before closing\n• Offer the buyer a closing credit instead\n• Decline some or all requests\n• A combination of the above\n\nI'll contact you shortly to go through each item. The goal is to keep this deal together while protecting your interests.\n\n${sig}`},
+    {type:'milestone',id:'l-m-4',milestone:'Repair Negotiation Complete',
+     toLabel:`${d.otheragent} (Buyer's Agent)`,toEmail:d.otheragentEmail,
+     subject:`Repair Amendment Executed — Moving Forward — ${d.addr}`,
+     suggestDate:d.option,suggestNote:'Send once repair amendment is signed',
+     body:`Hi ${d.otheragent},\n\nThe repair amendment has been executed and both parties are in agreement. The option period expires on ${fmtDate(d.option)} and we are moving forward to closing on ${fmtDate(d.close)}.\n\nPlease confirm with your buyers that all is well. Thank you — looking forward to finishing strong!\n\n${sig}`},
+    {type:'milestone',id:'l-m-5',milestone:'Appraisal Scheduled',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`Appraisal Scheduled — Access Needed — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send when appraisal is confirmed',
+     body:`Hi ${d.seller},\n\nThe buyer's lender has scheduled an appraisal for ${d.addr}. I'll send the exact date and time as soon as I have it.\n\nTo help things go smoothly:\n• Make sure the home is accessible and tidy\n• Leave documentation of any recent improvements\n• Records of upgrade costs can be helpful to the appraiser\n\nI'll follow up as soon as we have results.\n\n${sig}`},
+    {type:'milestone',id:'l-m-6',milestone:'Buyer Loan Approved — Clear to Close',
+     toLabel:`${d.seller} & ${d.title}`,toEmail:[d.sellerEmail,d.titleEmail].filter(Boolean).join('; '),
+     subject:`Clear to Close — Almost There! — ${d.addr}`,
+     suggestDate:'',suggestNote:'Send same day CTC is received',
+     body:`Hi Team,\n\nGreat news — the buyer's loan has been approved and we are clear to close on ${d.addr}!\n\nClose Date: ${fmtDate(d.close)}\nTitle: ${d.title}\n\n${d.title} — please proceed with closing documents and the settlement statement.\n\n${d.seller} — I'll be in touch soon with your estimated net proceeds and what to expect on closing day.\n\nAlmost there — fantastic work everyone!\n\n${sig}`},
+    {type:'milestone',id:'l-m-7',milestone:'Final Walkthrough & Closing Day Prep',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`Final Walkthrough Coming — Closing Day Prep — ${d.addr}`,
+     suggestDate:d.close,suggestNote:'Send 2–3 days before closing',
+     body:`Hi ${d.seller},\n\nWe are in the home stretch! Here's what to expect:\n\nBefore Closing:\n• Completely vacate the property by closing day\n• All agreed-upon repairs must be complete\n• Leave all keys, garage openers, and mailbox keys\n• Leave the home in clean condition\n\nClosing Day (${fmtDate(d.close)}):\n• You can sign documents in advance or at the title office\n• Once the buyer's loan funds, the sale is complete\n• Your proceeds will arrive via wire or check\n\nYou are almost there — I'm so excited for you! 🎉\n\n${sig}`},
+    {type:'edu',id:'l-e-0',milestone:'Seller Education: Option Period',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`What the Option Period Means for You as a Seller`,
+     suggestDate:'',suggestNote:'Send day 1 — set seller expectations early',
+     body:`Hi ${d.seller},\n\nNow that we are under contract, let me explain what the option period means for you.\n\nWhat is it?\nThe buyer has a window (ending ${fmtDate(d.option)}) during which they can walk away for any reason and get their earnest money back.\n\nWhat does that mean for you?\n• Your home is off the market during this time\n• The buyer will conduct their inspection\n• They may come back with a repair request\n\nIs it scary? It doesn't have to be! The option period is completely standard in Texas contracts. I'll keep you informed every step of the way.\n\n${sig}`},
+    {type:'edu',id:'l-e-1',milestone:'Seller Education: Repair Requests',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`How to Think About Repair Requests`,
+     suggestDate:'',suggestNote:'Send when repair request is received',
+     body:`Hi ${d.seller},\n\nWhen a repair request comes in it can feel overwhelming — but let's keep perspective:\n\nBuyers typically ask for:\n• Safety items (smoke detectors, GFCI, gas lines)\n• Roof, HVAC, or water heater issues\n• Major structural or plumbing concerns\n\nHow to respond:\n• You don't have to fix everything\n• A closing credit is often the easiest solution\n• Saying no to minor cosmetic items is perfectly reasonable\n\nIf we can't agree, the buyer may walk — but with my guidance we'll find a fair resolution.\n\n${sig}`},
+    {type:'edu',id:'l-e-2',milestone:'Seller Education: Appraisal',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`The Appraisal — What to Expect as a Seller`,
+     suggestDate:'',suggestNote:'Send when appraisal is scheduled',
+     body:`Hi ${d.seller},\n\nThe appraisal is an important step in the buyer's loan process. Here's what it means for you:\n\nBest case: Your home appraises at or above ${d.price} — we're on track!\n\nIf it comes in low:\n• We can negotiate on price with the buyer\n• The buyer can make up the difference in cash\n• Deals rarely fall apart — we have options\n\nI'll notify you as soon as the results are available.\n\n${sig}`},
+    {type:'edu',id:'l-e-3',milestone:'Seller Education: Clear to Close',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`What Does "Clear to Close" Mean for You?`,
+     suggestDate:'',suggestNote:'Send same day as CTC',
+     body:`Hi ${d.seller},\n\n"Clear to close" means the buyer's lender has fully approved the loan and we are ready to complete the sale of ${d.addr}!\n\nHere's what happens next:\n1. Title prepares your closing documents and net proceeds statement\n2. You review what you'll walk away with after payoff and fees\n3. You sign the deed\n4. The buyer's loan funds\n5. The sale is officially complete — and you get your money!\n\nFunding typically happens same day or the next business day.\n\nYou are almost at the finish line!\n\n${sig}`},
+    {type:'edu',id:'l-e-4',milestone:'Seller Education: Closing Day',
+     toLabel:d.seller,toEmail:d.sellerEmail,
+     subject:`Closing Day — What to Expect and How to Prepare`,
+     suggestDate:d.close,suggestNote:'Send the evening before closing',
+     body:`Hi ${d.seller},\n\nClosing day is ${fmtDate(d.close)} — here is everything you need to know:\n\nBefore closing:\n• Completely vacate the property\n• Leave all keys, garage openers, mailbox keys, HOA fobs\n• Transfer utilities out of your name as of closing day\n\nAt the closing table:\n• Bring a valid photo ID\n• Sign the deed transferring ownership to the buyer\n• Your net proceeds arrive via wire or check\n\nAfter closing:\n• Cancel your homeowner's insurance after funding is confirmed\n• Update your address everywhere\n• Celebrate — you did it! 🎉\n\nIt has been a true pleasure representing you!\n\n${sig}`},
+  ];
+}
+</script>
+</body>
+</html>
