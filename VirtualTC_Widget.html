@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Virtual Transaction Coordinator — LoanLady Team</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  
   :root {
     --purple:#6B4FA0;--purple-lt:#9B7FD0;--purple-bg:#F3EFFE;
     --pink:#C94F7C;--pink-lt:#F0A0BE;--pink-bg:#FEF0F5;
@@ -16,18 +16,18 @@
     --radius:12px;--radius-lg:18px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:var(--offwhite);color:var(--dark);min-height:100vh;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--offwhite);color:var(--dark);min-height:100vh;}
 
   .header{background:var(--dark);padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
   .header-left{display:flex;align-items:center;gap:1rem;}
   .header-logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:20px;}
-  .header-title h1{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--white);}
+  .header-title h1{font-family:Georgia,'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--white);}
   .header-title p{font-size:.72rem;color:var(--purple-lt);margin-top:2px;}
   .header-badge{font-size:.7rem;font-weight:500;background:rgba(255,255,255,.08);color:var(--pink-lt);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;white-space:nowrap;}
 
   .tabs-wrap{background:var(--dark);padding:0 2rem;border-bottom:1px solid rgba(255,255,255,.08);}
   .tabs{display:flex;max-width:960px;}
-  .tab-btn{padding:.8rem 1.6rem;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tab-btn{padding:.8rem 1.6rem;border:none;background:transparent;color:var(--muted);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
   .tab-btn:hover{color:var(--purple-lt);}
   .tab-btn.active{color:var(--white);border-bottom-color:var(--purple-lt);}
 
@@ -38,22 +38,22 @@
   .rebrand-note strong{color:var(--purple);}
 
   .form-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;}
-  .form-card h2{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:var(--dark);margin-bottom:1.1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);}
+  .form-card h2{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;font-weight:600;color:var(--dark);margin-bottom:1.1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
   @media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
   .field label{display:block;font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
-  .field input{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--dark);background:var(--white);transition:border-color .2s;outline:none;}
+  .field input{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;color:var(--dark);background:var(--white);transition:border-color .2s;outline:none;}
   .field input:focus{border-color:var(--purple);}
   .field input::placeholder{color:#C0B8D0;}
 
-  .generate-btn{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--purple),var(--pink));color:var(--white);border:none;border-radius:var(--radius);font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .15s;}
+  .generate-btn{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--purple),var(--pink));color:var(--white);border:none;border-radius:var(--radius);font-family:Georgia,'Times New Roman',serif;font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .15s;}
   .generate-btn:hover{opacity:.92;transform:translateY(-1px);}
 
   .results{display:none;margin-top:1.75rem;}.results.visible{display:block;}
   .results-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.1rem;}
-  .results-topbar h2{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--dark);}
+  .results-topbar h2{font-family:Georgia,'Times New Roman',serif;font-size:1.15rem;color:var(--dark);}
 
-  .btn{padding:.45rem 1rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block;}
+  .btn{padding:.45rem 1rem;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block;}
   .btn-outline{background:var(--white);border:1.5px solid var(--border);color:var(--mid);}
   .btn-outline:hover{border-color:var(--purple);color:var(--purple);}
   .btn-green{background:var(--green);color:var(--white);border:1.5px solid var(--green);}
@@ -71,18 +71,18 @@
   .email-to{font-size:.75rem;color:var(--muted);margin-top:2px;}
   .email-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:wrap;align-items:center;}
 
-  .copy-btn{padding:.32rem .75rem;background:var(--white);border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;color:var(--mid);cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .copy-btn{padding:.32rem .75rem;background:var(--white);border:1.5px solid var(--border);border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.75rem;font-weight:600;color:var(--mid);cursor:pointer;white-space:nowrap;transition:all .15s;}
   .copy-btn:hover{border-color:var(--purple);color:var(--purple);}
   .copy-btn.copied{background:var(--green-bg);border-color:var(--green);color:var(--green);}
 
-  .outlook-btn{padding:.32rem .85rem;background:#0078D4;color:var(--white);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+  .outlook-btn{padding:.32rem .85rem;background:#0078D4;color:var(--white);border:none;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
   .outlook-btn:hover{opacity:.88;}
 
   .schedule-row{display:flex;align-items:center;gap:.55rem;padding:.5rem 1rem;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);flex-wrap:wrap;}
   .schedule-label{font-size:.72rem;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
-  .schedule-row input[type="date"],.schedule-row input[type="time"]{padding:.28rem .55rem;border:1.5px solid var(--amber-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--dark);background:var(--white);outline:none;}
+  .schedule-row input[type="date"],.schedule-row input[type="time"]{padding:.28rem .55rem;border:1.5px solid var(--amber-border);border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.8rem;color:var(--dark);background:var(--white);outline:none;}
   .schedule-row input:focus{border-color:var(--amber);}
-  .cal-btn{padding:.28rem .75rem;background:var(--amber);color:var(--white);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;}
+  .cal-btn{padding:.28rem .75rem;background:var(--amber);color:var(--white);border:none;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;}
   .cal-btn:hover{opacity:.85;}
   .suggest-note{font-size:.68rem;color:#997030;font-style:italic;flex:1;min-width:120px;}
 
